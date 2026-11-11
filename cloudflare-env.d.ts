@@ -4,6 +4,5 @@ declare namespace Cloudflare {
     UDO_ADMIN_PASSWORD?: string;
     ASSETS?: Fetcher;
     DB?: D1Database;
-    BUCKET?: R2Bucket;
   }
 }
