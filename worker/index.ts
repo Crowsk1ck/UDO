@@ -1,9 +1,21 @@
+import { authorize } from './auth';
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
 import type { ConnectorBinding } from "../lib/connector-contract.mjs";
 
 const worker = {
-  fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
+  async fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
+    if (!import.meta.env.DEV) {
+      const blocked = await authorize(request, env);
+      if (blocked) return blocked;
+      const headers = new Headers(request.headers);
+      headers.set('oai-authenticated-user-email', env.UDO_ADMIN_USER || 'admin');
+      request = new Request(request, { headers });
+    }
+    const pathname = new URL(request.url).pathname;
+    if (!import.meta.env.DEV && env.ASSETS && (pathname.startsWith('/_next/') || pathname === '/favicon.svg')) {
+      return env.ASSETS.fetch(request);
+    }
     let binding = ctx.props?.CONNECTORS;
     // Local preview emulates the same request-scoped capability. This branch and
     // the auxiliary service binding are absent from production builds.
