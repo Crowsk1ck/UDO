@@ -7,6 +7,8 @@ if (!id || !/^[0-9a-f-]{36}$/i.test(id) || id === '00000000-0000-4000-8000-00000
 }
 config.name = 'udo-panel';
 config.topLevelName = 'udo-panel';
+// Vite and Wrangler can both contribute the same compatibility flag.
+config.compatibility_flags = [...new Set(config.compatibility_flags || [])];
 config.workers_dev = true;
 config.preview_urls = false;
 config.assets = { ...config.assets, binding: 'ASSETS', run_worker_first: true };
