@@ -1,6 +1,6 @@
 # Панель управління УДО
 
-Українська панель для щоденної роботи відділу УДО в GTA RP. Стиль Soft Dark Minimal, адаптивний інтерфейс. Згадки НГУ та розділ блокпостів прибрано.
+Українська панель для щоденної роботи відділу УДО в GTA RP. Стиль Soft Dark Minimal, адаптивний інтерфейс.
 
 ## Можливості
 
@@ -16,15 +16,6 @@
 React + Vinext, Cloudflare Workers, D1 (записи), R2 (скріншоти). Репозиторій містить лише вихідний код і початкові шаблони, без робочої бази, файлів користувачів і секретів.
 
 ## Локальний запуск
-
-Node.js >=22.13.0.
-
-```bash
-npm ci
-npm run build
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_simple_carmella_unuscione.sql
-npm run dev
-```
 
 ## Розгортання
 
