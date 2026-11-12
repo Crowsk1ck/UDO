@@ -3,8 +3,8 @@
 1. У Cloudflare створіть D1 database `udo-db`. Скопіюйте Database ID.
 2. R2 не потрібне: докази додаються посиланнями ImgBB.
 3. Workers & Pages → Create application → Import a repository → `Crowsk1ck/UDO`.
-4. Назва Worker: `udo-panel`; production branch: `main`.
-5. Build command: `npm run build:cloudflare`.
+4. Назва Worker: `udo`; production branch: `main`.
+5. Build command: `CF_D1_DATABASE_ID=9be2d646-a67e-4de1-b049-01b231e016f7 npm run build:cloudflare` (або задайте `CF_D1_DATABASE_ID` як build variable у Cloudflare).
 6. Deploy command: `npm run deploy:cloudflare`.
 7. У build variables додайте `CF_D1_DATABASE_ID` з кроку 1.
 8. Для build token потрібні права Workers Scripts Edit та D1 Edit у цьому акаунті. Токен зберігайте лише в Cloudflare, не в репозиторії або чаті.
