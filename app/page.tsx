@@ -8,7 +8,17 @@ export default function App(){
 const [data,D]=useState<any>(initial),[rev,R]=useState(0),[ready,Ready]=useState(false),[busy,B]=useState(false),[section,S]=useState('Огляд'),[query,Q]=useState(''),[filter,F]=useState(''),[modal,M]=useState<any>(null),[toast,T]=useState(''),[menu,Menu]=useState(false),[tab,Tab]=useState(0),[vars,V]=useState<any>({'ім’я':'','час':'','місце':'','посада':''});
 useEffect(()=>{fetch('/api/state').then(r=>{if(!r.ok)throw Error();return r.json()}).then((x:any)=>{if(x.data)D(x.data);R(x.revision);Ready(true)}).catch(()=>T('Не вдалося завантажити дані. Оновіть сторінку.'))},[]);
 function msg(s:string){T(s);setTimeout(()=>T(''),4000)}
-async function save(next:any,action:string){if(busy||!ready)return false;B(true);try{const r=await fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:next,revision:rev,action})});if(!r.ok)throw Error(await r.text());const x:any=await r.json();D(x.data);R(x.revision);msg('Збережено');return true}catch(e:any){msg(e.message);return false}finally{B(false)}}
+async function save(next:any,action:string){if(busy||!ready)return false;B(true);try{const r=await fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:next,revision:rev,action})});if(!r.ok)throw Error(await r.text());const x:any=await r.json();D(x.data);R(x.revision);
+try{
+ const check=await fetch('/api/state',{cache:'no-store'});
+ if(!check.ok)throw new Error('Не вдалося повторно прочитати дані');
+ const persisted:any=await check.json();
+ if(!persisted.data||typeof persisted.revision!=='number')throw new Error('Некоректна відповідь перевірки');
+ D(persisted.data);R(persisted.revision);
+ if(persisted.revision===x.revision&&JSON.stringify(persisted.data)===JSON.stringify(x.data))msg('Збережено в D1 та перевірено');
+ else msg('Запис прийнято, але стан змінився. Перевірте останні зміни.');
+}catch{msg('Запис прийнято, але повторну перевірку D1 не вдалося виконати.');}
+return true}catch(e:any){msg(e.message);return false}finally{B(false)}}
 function nav(s:string){S(s);Q('');F('');Menu(false)}
 function add(s=section){M({id:crypto.randomUUID(),section:s,title:'',body:'',status:'Заплановано',rank:ranks[0],since:new Date().toISOString(),channel:'Discord',files:[]})}
 async function submit(e:any){e.preventDefault();let item={...modal};if(item.evidenceUrl?.trim()){try{const f=parseEvidenceLink(item.evidenceUrl);if(!(item.files||[]).some((x:any)=>x.url===f.url))item.files=[...(item.files||[]),f];}catch(e:any){msg(e.message);return}}delete item.evidenceUrl;if(item.section==='Посади та підвищення'&&item.status==='Погоджено')item.status='На перевірці';delete item.planIndex;if(modal.planIndex!==undefined){const plans=[...data.plans];plans[modal.planIndex]={...item,tasks:item.body.split('\n').filter(Boolean)};if(await save({...data,plans,records:data.records.map((r:any)=>r.section==='Посади та підвищення'&&(r.plan||0)===modal.planIndex?{...r,checks:{},status:'На доопрацювання'}:r)},'Змінено вимоги підвищення; відповідні чеклісти скинуто для повторної перевірки'))M(null);return}const records=data.records.some((r:any)=>r.id===item.id)?data.records.map((r:any)=>r.id===item.id?item:r):[...data.records,item];if(await save({...data,records},'Збережено: '+item.title))M(null)}
