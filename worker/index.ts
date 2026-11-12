@@ -1,18 +1,21 @@
-import { authorize } from './auth';
+import { identity, authRoute } from './auth';
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
 import type { ConnectorBinding } from "../lib/connector-contract.mjs";
 
 const worker = {
   async fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
-    if (!import.meta.env.DEV) {
-      const blocked = await authorize(request, env);
-      if (blocked) return blocked;
-      const headers = new Headers(request.headers);
-      headers.set('oai-authenticated-user-email', env.UDO_ADMIN_USER || 'admin');
-      request = new Request(request, { headers });
-    }
     const pathname = new URL(request.url).pathname;
+    const user = await identity(request, env);
+    const auth = await authRoute(request, env, user);
+    if (auth) return auth;
+    if (!user) return pathname.startsWith('/api/')
+      ? new Response('Увійдіть до панелі', {status:401})
+      : Response.redirect(new URL('/login', request.url).href, 303);
+    const headers = new Headers(request.headers);
+    headers.set('x-udo-user', JSON.stringify(user));
+    headers.set('oai-authenticated-user-email', user.username);
+    request = new Request(request, {headers});
     if (!import.meta.env.DEV && env.ASSETS && (pathname.startsWith('/_next/') || pathname === '/favicon.svg')) {
       return env.ASSETS.fetch(request);
     }
